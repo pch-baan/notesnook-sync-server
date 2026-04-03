@@ -54,4 +54,11 @@ aws secretsmanager get-secret-value \
 ## Lưu ý
 - EC2 instance chỉ có thể đọc secret, không sửa/xóa được
 - Không cần lưu AWS access key trên EC2 hay trong GitHub Secrets
-- Nếu EC2 chưa có AWS CLI: `sudo apt update && sudo apt install -y awscli`
+- Nếu EC2 chưa có AWS CLI (package `awscli` không có trong apt), cài AWS CLI v2 từ Amazon:
+  ```bash
+  sudo apt install unzip -y
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
+  aws --version
+  ```
