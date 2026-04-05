@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Paddle Checkout Test</title>
+    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+</head>
+<body>
+    <h1>Paddle Checkout Test</h1>
+    <p>Click button to open Paddle checkout overlay:</p>
+
+    <button onclick="checkout('pri_01knexwa1jz8730kbdg02gepwj', 'PRO Monthly')">PRO Monthly</button>
+    <button onclick="checkout('pri_01knexx47yv6y5hbv6bh61bjzt', 'PRO Yearly')">PRO Yearly</button>
+    <button onclick="checkout('pri_01knexpea190b07xnf2pnzy1jv', 'Essential Monthly')">Essential Monthly</button>
+
+    <pre id="log"></pre>
+
+    <script>
+        // Initialize Paddle in Sandbox mode
+        Paddle.Environment.set("sandbox");
+        Paddle.Initialize({
+            token: "test_3d7bff14084c16c37786a6c702b",
+            eventCallback: function(event) {
+                document.getElementById('log').textContent += JSON.stringify(event, null, 2) + '\n';
+            }
+        });
+
+        function checkout(priceId, label) {
+            document.getElementById('log').textContent = 'Opening checkout for ' + label + '...\n';
+            Paddle.Checkout.open({
+                items: [{ priceId: priceId, quantity: 1 }],
+                customData: { userId: "69d26fdc8816a8337074362b" },
+                customer: { email: "webhook-test@example.com" }
+            });
+        }
+    </script>
+
+    <hr>
+    <h3>Sandbox Test Card</h3>
+    <pre>
+    Card:   4242 4242 4242 4242
+    Expiry: Any future date (e.g. 12/28)
+    CVV:    Any 3 digits (e.g. 123)
+    Name:   Any name
+    </pre>
+</body>
+</html>

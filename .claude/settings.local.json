@@ -12,7 +12,29 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''''issuer:'''', d[''''issuer'''']\\); print\\(''''jwks_uri:'''', d[''''jwks_uri'''']\\)\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebFetch(domain:developer.paddle.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:webcache.googleusercontent.com)",
+      "WebFetch(domain:playbooks.com)",
+      "Bash(claude mcp:*)",
+      "mcp__paddle-docs__search_paddle_knowledge_sources",
+      "Bash(grep -E \"\\\\.\\(cs|json\\)$\")",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet --version)",
+      "Bash(mongosh --version)",
+      "Bash(docker --version)",
+      "Bash(pkill -f \"dotnet.*Notesnook.API\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(pkill -f \"dotnet.*Notesnook\")",
+      "Bash(ls -la /Users/phanchihieu/z4l_dev/moniva_vn/notesnook-sync-server/Streetwriters.Identity/bin/Debug/net9.0/.env*)",
+      "Bash(dotnet run:*)",
+      "Bash(ngrok version:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(open:*)",
+      "Bash(kill 20456)"
     ]
   }
 }

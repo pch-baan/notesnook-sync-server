@@ -37,7 +37,7 @@ namespace Streetwriters.Common.Accessors
         private async Task InitAsync()
         {
             this.UserAccountService = await WampServers.IdentityServer.GetServiceAsync<IUserAccountService>(InitAsync);
-            if (!Constants.IS_SELF_HOSTED && server != Servers.SubscriptionServer)
+            if (!Constants.IS_SELF_HOSTED && !Constants.PADDLE_ENABLED && server != Servers.SubscriptionServer)
             {
                 this.UserSubscriptionService = await WampServers.SubscriptionServer.GetServiceAsync<IUserSubscriptionService>(InitAsync);
             }

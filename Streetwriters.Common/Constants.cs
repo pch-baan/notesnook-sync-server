@@ -82,6 +82,19 @@ namespace Streetwriters.Common
         public static string? SIGNALR_REDIS_CONNECTION_STRING => ReadSecret("SIGNALR_REDIS_CONNECTION_STRING");
         public static string MONOGRAPH_PUBLIC_URL => ReadSecret("MONOGRAPH_PUBLIC_URL") ?? "https://monogr.ph";
 
+        // Paddle Billing
+        public static string? PADDLE_API_KEY => ReadSecret("PADDLE_API_KEY");
+        public static string? PADDLE_WEBHOOK_SECRET => ReadSecret("PADDLE_WEBHOOK_SECRET");
+        public static string? PADDLE_ENVIRONMENT => ReadSecret("PADDLE_ENVIRONMENT"); // "sandbox" or "production"
+        public static bool PADDLE_ENABLED => !IS_SELF_HOSTED && !string.IsNullOrEmpty(PADDLE_API_KEY);
+
+        // Paddle Price ID → Plan mapping (configured in Paddle dashboard)
+        public static string? PADDLE_PRICE_ID_PRO_MONTHLY => ReadSecret("PADDLE_PRICE_ID_PRO_MONTHLY");
+        public static string? PADDLE_PRICE_ID_PRO_YEARLY => ReadSecret("PADDLE_PRICE_ID_PRO_YEARLY");
+        public static string? PADDLE_PRICE_ID_ESSENTIAL_MONTHLY => ReadSecret("PADDLE_PRICE_ID_ESSENTIAL_MONTHLY");
+        public static string? PADDLE_PRICE_ID_ESSENTIAL_YEARLY => ReadSecret("PADDLE_PRICE_ID_ESSENTIAL_YEARLY");
+        public static string? PADDLE_PRICE_ID_EDUCATION_YEARLY => ReadSecret("PADDLE_PRICE_ID_EDUCATION_YEARLY");
+
         public static string? ReadSecret(string name)
         {
             var value = Environment.GetEnvironmentVariable(name);

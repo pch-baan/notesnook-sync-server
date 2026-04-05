@@ -24,6 +24,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 using Notesnook.API.Helpers;
@@ -36,13 +37,16 @@ using Streetwriters.Common.Enums;
 using Streetwriters.Common.Extensions;
 using Streetwriters.Common.Messages;
 using Streetwriters.Common.Models;
+using Streetwriters.Common.Services;
 using Streetwriters.Data.Interfaces;
+using Streetwriters.Data.Repositories;
+using Notesnook.API.Paddle;
 
 namespace Notesnook.API.Services
 {
     public class UserService(IHttpContextAccessor accessor,
         ISyncItemsRepositoryAccessor syncItemsRepositoryAccessor,
-        IUnitOfWork unitOfWork, IS3Service s3Service, SyncDeviceService syncDeviceService, WampServiceAccessor serviceAccessor, ILogger<UserService> logger) : IUserService
+        IUnitOfWork unitOfWork, IS3Service s3Service, SyncDeviceService syncDeviceService, WampServiceAccessor serviceAccessor, IServiceProvider serviceProvider, ILogger<UserService> logger) : IUserService
     {
         private static readonly System.Security.Cryptography.RandomNumberGenerator Rng = System.Security.Cryptography.RandomNumberGenerator.Create();
         private readonly HttpClient httpClient = new();
@@ -71,7 +75,26 @@ namespace Notesnook.API.Services
                 Salt = GetSalt()
             });
 
-            if (!Constants.IS_SELF_HOSTED)
+            if (Constants.IS_SELF_HOSTED)
+            {
+                // Self-hosted: no subscription management needed (all users are BELIEVER)
+            }
+            else if (Constants.PADDLE_ENABLED)
+            {
+                var subscriptionRepo = serviceProvider.GetRequiredService<Repository<Subscription>>();
+                await subscriptionRepo.InsertAsync(new Subscription
+                {
+                    UserId = response.UserId,
+                    AppId = ApplicationType.NOTESNOOK,
+                    Provider = SubscriptionProvider.STREETWRITERS,
+                    Plan = SubscriptionPlan.FREE,
+                    Status = SubscriptionStatus.ACTIVE,
+                    StartDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    ExpiryDate = 0,
+                    UpdatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                });
+            }
+            else
             {
                 await WampServers.SubscriptionServer.PublishMessageAsync(SubscriptionServerTopics.CreateSubscriptionV2Topic, new CreateSubscriptionMessageV2
                 {
@@ -106,6 +129,11 @@ namespace Notesnook.API.Services
                     // this date doesn't matter as the subscription is static.
                     ExpiryDate = DateTimeOffset.UtcNow.AddYears(1).ToUnixTimeMilliseconds()
                 };
+            }
+            else if (Constants.PADDLE_ENABLED)
+            {
+                var paddleSubService = serviceProvider.GetRequiredService<PaddleSubscriptionService>();
+                subscription = await paddleSubService.GetUserSubscriptionAsync(Clients.Notesnook.Id, userId) ?? throw new Exception("User subscription not found.");
             }
             else
             {
@@ -218,7 +246,32 @@ namespace Notesnook.API.Services
 
             await syncDeviceService.ResetDevicesAsync(userId);
 
-            if (!Constants.IS_SELF_HOSTED)
+            if (Constants.IS_SELF_HOSTED)
+            {
+                // Self-hosted: no subscription to delete
+            }
+            else if (Constants.PADDLE_ENABLED)
+            {
+                var subscriptionRepo = serviceProvider.GetRequiredService<Repository<Subscription>>();
+                var sub = await subscriptionRepo.FindOneAsync(s => s.UserId == userId);
+                if (sub != null)
+                {
+                    if (sub.SubscriptionId != null && sub.Status == SubscriptionStatus.ACTIVE)
+                    {
+                        try
+                        {
+                            var paddleBilling = serviceProvider.GetRequiredService<PaddleBillingService>();
+                            await paddleBilling.CancelSubscriptionAsync(sub.SubscriptionId);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "Failed to cancel Paddle subscription {SubscriptionId} for user {UserId}", sub.SubscriptionId, userId);
+                        }
+                    }
+                    await subscriptionRepo.DeleteManyAsync(s => s.UserId == userId);
+                }
+            }
+            else
             {
                 await WampServers.SubscriptionServer.PublishMessageAsync(SubscriptionServerTopics.DeleteSubscriptionTopic, new DeleteSubscriptionMessage
                 {

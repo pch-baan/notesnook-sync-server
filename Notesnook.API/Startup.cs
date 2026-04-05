@@ -67,6 +67,7 @@ using Streetwriters.Data;
 using Streetwriters.Data.DbContexts;
 using Streetwriters.Data.Interfaces;
 using Streetwriters.Data.Repositories;
+using Notesnook.API.Paddle;
 
 namespace Notesnook.API
 {
@@ -205,6 +206,18 @@ namespace Notesnook.API
             services.AddScoped<IURLAnalyzer, URLAnalyzer>();
 
             services.AddWampServiceAccessor(Servers.NotesnookAPI);
+
+            // Paddle Billing integration
+            if (Constants.PADDLE_ENABLED)
+            {
+                services.AddRepository<Subscription>(Collections.SubscriptionsKey, "notesnook");
+                if (!BsonClassMap.IsClassMapRegistered(typeof(Subscription)))
+                    BsonClassMap.RegisterClassMap<Subscription>();
+
+                services.AddSingleton(new PaddleBillingService(Constants.PADDLE_API_KEY!));
+                services.AddScoped<PaddleWebhookService>();
+                services.AddScoped<PaddleSubscriptionService>();
+            }
 
             services.AddControllers();
 
